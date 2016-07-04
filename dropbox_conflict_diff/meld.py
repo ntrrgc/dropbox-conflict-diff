@@ -38,6 +38,6 @@ class MeldError(Exception):
 def meld(path_conflict, path_original):
     if shutil.which("meld") is not None:
         ensure_meld_in_background()
-        subprocess.call(["meld", "--newtab", path_conflict, path_original])
+        subprocess.call(["meld", "--newtab", path_original, path_conflict])
     else:
         raise MeldError("meld is not installed")

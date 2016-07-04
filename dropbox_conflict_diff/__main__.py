@@ -36,6 +36,7 @@ def meld_retry_not_installed(*args, **kwargs):
     while True:
         try:
             meld(*args, **kwargs)
+            return
         except MeldError as err:
             print("Meld is not installed. Please install it to merge files.")
 
@@ -51,29 +52,28 @@ def meld_retry_not_installed(*args, **kwargs):
 
 
 def meld_and_ask(path_conflict, path_original):
-    while True:
-        try:
-            meld_retry_not_installed(path_conflict, path_original)
-        except MeldError:
-            # Meld aborted. User refused to install it, keep both files.
-            return
+    try:
+        meld_retry_not_installed(path_conflict, path_original)
+    except MeldError:
+        # Meld aborted. User refused to install it, keep both files.
+        return
 
-        print("Meld has been closed. Do you want to remove the conflicted copy?")
+    print("Meld has been closed. Do you want to remove the conflicted copy?")
 
-        opt_remove_conflicted = MenuOption("r", "Remove the conflicted copy")
-        opt_keep = MenuOption("k", "Keep the conflicted copy")
-        opt_merge_again = MenuOption("m", "Show meld again and retry the merge")
+    opt_remove_conflicted = MenuOption("r", "Remove the conflicted copy")
+    opt_keep = MenuOption("k", "Keep the conflicted copy")
+    opt_merge_again = MenuOption("m", "Show meld again and retry the merge")
 
-        option = menu([opt_remove_conflicted, opt_keep, opt_merge_again])
+    option = menu([opt_remove_conflicted, opt_keep, opt_merge_again])
 
-        if option == opt_remove_conflicted:
-            os.remove(path_conflict)
-            print("Removed %s" % path_conflict)
-        elif option == opt_keep:
-            print("Kept conflicted copy.")
-            return
-        elif option == opt_merge_again:
-            print("Running Meld again...")
+    if option == opt_remove_conflicted:
+        os.remove(path_conflict)
+        print("Removed %s" % path_conflict)
+    elif option == opt_keep:
+        print("Kept conflicted copy.")
+        return
+    elif option == opt_merge_again:
+        print("Running Meld again...")
 
 
 def ask_different(path_conflict, path_original):
