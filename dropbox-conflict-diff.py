@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import re
+import shutil
 import subprocess
 
 conflict_strings = [
@@ -14,7 +15,10 @@ re_name = re.compile(r"^(.*) \([^()]*conflict[^()].*\)(\.?.*)$")
 
 default_ignore_dirs = ".git,.idea"
 
-def scan_conflicts(path=".", remove_null_diffs=False, pager="cat", ignore_dirs=default_ignore_dirs):
+diff_command = "colordiff" if shutil.which("colordiff") is not None else "diff"
+
+
+def scan_conflicts(path=".", remove_null_diffs=False, use_pager=False, ignore_dirs=default_ignore_dirs):
     ignore_dirs = ignore_dirs.split(",")
     for root, dirs, files in os.walk(path):
         # Filter ignored directories
@@ -47,10 +51,13 @@ def scan_conflicts(path=".", remove_null_diffs=False, pager="cat", ignore_dirs=d
                     else:
                         # Files are different, show diff
                         diff_process = subprocess.Popen([
-                            "diff", "-u", path_original, path_conflict],
-                            stdout=subprocess.PIPE
+                            diff_command, "-u", path_original, path_conflict],
+                            stdout=subprocess.PIPE if use_pager else None
                         )
-                        subprocess.call([pager], stdin=diff_process.stdout)
+                        if use_pager:
+                            subprocess.call(["less", "-R"], stdin=diff_process.stdout)
+                        else:
+                            diff_process.wait()
                 else:
                     print("Warning: Could not find '%s', but there is a conflicted copy: %s"
                           % (unconflicted_name, name))
@@ -64,8 +71,8 @@ if __name__ == '__main__':
     
     parser.add_argument("path", default=".", type=str, help=
         "Directory to scan (default is current working directory)")
-    parser.add_argument("--pager", default="cat", type=str, help=
-        "Pager to use (e.g. less)")
+    parser.add_argument("--pager", action="store_true", help=
+        "Use less to display the differences.")
     parser.add_argument("--ignore-dirs", default=default_ignore_dirs, type=str, help=
         "List of directory names that will be pruned during the exploration. By default: " +
         default_ignore_dirs)
@@ -77,6 +84,6 @@ if __name__ == '__main__':
     scan_conflicts(
         path=args.path,
         remove_null_diffs=args.remove_null_diffs,
-        pager=args.pager,
+        use_pager=args.pager,
         ignore_dirs=args.ignore_dirs
     )
