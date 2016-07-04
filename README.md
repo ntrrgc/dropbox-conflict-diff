@@ -2,7 +2,7 @@
 
 A script to easily find the difference between Dropbox conflicted copies and their original files.
 
-![](http://i.imgur.com/Nk87lAU.png)
+<img src="https://i.imgur.com/Nk87lAU.png" width="710">
 
 ##Requirements
 
